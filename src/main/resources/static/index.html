@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>DevOps Migration Simulator</title>
+	<style>
+		body { font-family: Arial, sans-serif; margin: 2rem; background: #f7f7fb; color: #1f2430; }
+		h1 { margin-bottom: 0.25rem; }
+		.subtitle { color: #555; margin-bottom: 1.5rem; }
+		.card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center; }
+		.badge { padding: 0.2rem 0.5rem; border-radius: 999px; font-size: 0.8rem; }
+		.badge.jenkins { background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; }
+		.badge.gh { background: #eef2ff; color: #3730a3; border: 1px solid #c7d2fe; }
+		.badge.migrated { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+		button { background: #111827; color: #fff; border: none; padding: 0.5rem 0.8rem; border-radius: 6px; cursor: pointer; }
+		button[disabled] { opacity: 0.6; cursor: not-allowed; }
+		form { display: flex; gap: 0.5rem; margin-top: 1rem; }
+		input, select { padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; }
+	</style>
+</head>
+<body>
+	<h1>DevOps Migration Simulator</h1>
+	<div class="subtitle">Simulate moving builds from Jenkins to GitHub Actions.</div>
+
+	<div id="list"></div>
+
+	<h3>Create Pipeline</h3>
+	<form id="createForm">
+		<input type="text" id="name" placeholder="Pipeline name" required />
+		<select id="source">
+			<option value="JENKINS">Jenkins</option>
+			<option value="GITHUB_ACTIONS">GitHub Actions</option>
+		</select>
+		<button type="submit">Add</button>
+	</form>
+
+	<script>
+		async function fetchPipelines() {
+			const res = await fetch('/api/pipelines');
+			const data = await res.json();
+			renderList(data);
+		}
+
+		function renderList(items) {
+			const list = document.getElementById('list');
+			list.innerHTML = '';
+			items.forEach(p => {
+				const card = document.createElement('div');
+				card.className = 'card';
+				const left = document.createElement('div');
+				left.innerHTML = `<div><strong>${p.name}</strong></div>` +
+					`<div style="margin-top: 0.25rem; display:flex; gap: 0.5rem; align-items:center;">` +
+					`<span class="badge ${p.source === 'JENKINS' ? 'jenkins' : 'gh'}">${p.source}</span>` +
+					`<span class="badge ${p.status === 'MIGRATED' ? 'migrated' : ''}">${p.status}</span>` +
+					`</div>`;
+				const right = document.createElement('div');
+				const btn = document.createElement('button');
+				btn.textContent = 'Migrate to GitHub Actions';
+				btn.disabled = p.status === 'MIGRATED';
+				btn.onclick = async () => {
+					btn.disabled = true;
+					await fetch(`/api/pipelines/${p.id}/migrate`, { method: 'POST' });
+					await fetchPipelines();
+				};
+				right.appendChild(btn);
+				card.appendChild(left);
+				card.appendChild(right);
+				list.appendChild(card);
+			});
+		}
+
+		document.getElementById('createForm').addEventListener('submit', async (e) => {
+			e.preventDefault();
+			const name = document.getElementById('name').value;
+			const source = document.getElementById('source').value;
+			await fetch('/api/pipelines', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ name, source })
+			});
+			document.getElementById('name').value = '';
+			await fetchPipelines();
+		});
+
+		fetchPipelines();
+	</script>
+</body>
+</html> 
