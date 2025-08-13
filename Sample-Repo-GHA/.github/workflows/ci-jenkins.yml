@@ -1,0 +1,21 @@
+name: CI/CD Pipeline
+on:
+  push:
+    branches:
+    - main
+    - develop
+  pull_request:
+    branches:
+    - main
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Run Build
+      run: mvn -B -DskipTests clean package
+    - name: Run Test
+      run: mvn test
+    - name: Run Deliver
+      run: ./jenkins/scripts/deliver.sh
