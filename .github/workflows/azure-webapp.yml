@@ -32,7 +32,7 @@ jobs:
         with:
           name: app
           path: |
-            target/*SNAPSHOT.jar
+            target/*.jar
             web.config
 
   deploy:
