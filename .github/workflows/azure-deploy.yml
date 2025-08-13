@@ -36,11 +36,21 @@ jobs:
         cd Sample-Repo
         mvn test
     
+    - name: Locate built jar
+      id: jar
+      shell: bash
+      run: |
+        JAR_PATH=$(ls -1 Sample-Repo/target/*.jar | head -n 1)
+        JAR_NAME=$(basename "$JAR_PATH")
+        echo "path=$JAR_PATH" >> "$GITHUB_OUTPUT"
+        echo "name=$JAR_NAME" >> "$GITHUB_OUTPUT"
+        echo "Resolved jar: $JAR_NAME"
+    
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
         name: java-app-jar
-        path: Sample-Repo/target/*.jar
+        path: ${{ steps.jar.outputs.path }}
         retention-days: 30
     
     - name: Azure Login
@@ -53,12 +63,11 @@ jobs:
     
     - name: Deploy to Azure App Service
       if: github.ref == 'refs/heads/main'
-      uses: azure/webapps-deploy@v2
+      uses: azure/webapps-deploy@v3
       with:
         app-name: 'CTS-VibeAppUK51203-3'
-        package: 'Sample-Repo/target/*.jar'
-        startup-command: 'java -jar *.jar'
-        runtime-version: 'JAVA|21-java21'
+        package: ${{ steps.jar.outputs.path }}
+        startup-command: "java -jar ${{ steps.jar.outputs.name }}"
 
   security-scan:
     runs-on: ubuntu-latest
