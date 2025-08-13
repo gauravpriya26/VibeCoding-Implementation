@@ -50,9 +50,12 @@ jobs:
       - name: Normalize artifact name to app.jar
         shell: pwsh
         run: |
-          $jar = Get-ChildItem -Path . -Filter *SNAPSHOT.jar | Select-Object -First 1
-          if ($null -eq $jar) { Write-Error "Could not find built jar"; exit 1 }
-          Copy-Item $jar.FullName app.jar -Force
+          $jar = Get-ChildItem -Path . -Recurse -Filter *.jar | Select-Object -First 1
+          if ($null -eq $jar) {
+            Write-Host "Downloaded files:"; Get-ChildItem -Path . -Recurse
+            Write-Error "Could not find built jar under downloaded artifact"; exit 1
+          }
+          Copy-Item $jar.FullName ./app.jar -Force
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
