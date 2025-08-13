@@ -1,68 +1,75 @@
 # Azure Deployment Setup Guide
 
-## 🔧 Required GitHub Secrets
+## 🔧 Your Azure Environment Details
 
-To deploy your Java application to Azure App Service, you need to configure the following secrets in your GitHub repository:
+**App Name:** `CTS-VibeAppUK51203-3`  
+**Subscription:** `cb6255863a-vibecode05-az`  
+**Subscription ID:** `ba7f988a-1d5f-4d79-98a5-e7fce6ed86eb`  
+**Resource Group:** `CTS-VibeAppUK5120`  
 
-### Step 1: Create Azure Service Principal
+## 🚀 Quick Setup Commands
+
+### Step 1: Create Service Principal (Use these exact values)
 
 Run these commands in Azure Cloud Shell or Azure CLI:
 
 ```bash
-# Set variables
-SUBSCRIPTION_ID="your-subscription-id"
-RESOURCE_GROUP="your-resource-group-name"
-APP_NAME="vibecoding-java-app"
+# Set your specific variables
+SUBSCRIPTION_ID="ba7f988a-1d5f-4d79-98a5-e7fce6ed86eb"
+RESOURCE_GROUP="CTS-VibeAppUK5120"
+APP_NAME="CTS-VibeAppUK51203-3"
 
-# Create Service Principal
+# Create Service Principal with correct scope
 az ad sp create-for-rbac \
-  --name "github-actions-sp" \
+  --name "github-actions-vibecode-sp" \
   --role contributor \
   --scopes /subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP \
   --sdk-auth
 ```
 
+**Expected Output:**
+```json
+{
+  "clientId": "12345678-1234-1234-1234-123456789012",
+  "clientSecret": "your-client-secret-here",
+  "subscriptionId": "ba7f988a-1d5f-4d79-98a5-e7fce6ed86eb",
+  "tenantId": "87654321-4321-4321-4321-210987654321"
+}
+```
+
 ### Step 2: Configure GitHub Repository Secrets
 
-Go to your GitHub repository → Settings → Secrets and variables → Actions → New repository secret
+Go to: **GitHub Repository → Settings → Secrets and variables → Actions → New repository secret**
 
-Add these secrets:
+Add these secrets with the values from the Service Principal output:
 
-| Secret Name | Description | Example Value |
-|-------------|-------------|---------------|
-| `AZURE_CLIENT_ID` | Application (client) ID | `12345678-1234-1234-1234-123456789012` |
-| `AZURE_CLIENT_SECRET` | Client secret value | `your-client-secret-here` |
-| `AZURE_TENANT_ID` | Directory (tenant) ID | `87654321-4321-4321-4321-210987654321` |
-| `AZURE_SUBSCRIPTION_ID` | Subscription ID | `abcdef12-3456-7890-abcd-ef1234567890` |
+| Secret Name | Description | Your Value (from command output) |
+|-------------|-------------|-----------------------------------|
+| `AZURE_CLIENT_ID` | Application (client) ID | Copy `clientId` from output |
+| `AZURE_CLIENT_SECRET` | Client secret value | Copy `clientSecret` from output |
+| `AZURE_TENANT_ID` | Directory (tenant) ID | Copy `tenantId` from output |
+| `AZURE_SUBSCRIPTION_ID` | Subscription ID | `ba7f988a-1d5f-4d79-98a5-e7fce6ed86eb` |
 
-### Step 3: Create Azure App Service
+### Step 3: Configure Your Existing App Service
+
+Since your App Service already exists, just configure the settings:
 
 ```bash
-# Create Resource Group (if not exists)
-az group create --name $RESOURCE_GROUP --location "East US"
-
-# Create App Service Plan
-az appservice plan create \
-  --name "${APP_NAME}-plan" \
-  --resource-group $RESOURCE_GROUP \
-  --sku B1 \
-  --is-linux
-
-# Create Web App
-az webapp create \
-  --name $APP_NAME \
-  --resource-group $RESOURCE_GROUP \
-  --plan "${APP_NAME}-plan" \
-  --runtime "JAVA:21-java21"
-
-# Configure App Settings
+# Configure App Settings for your existing app
 az webapp config appsettings set \
-  --name $APP_NAME \
-  --resource-group $RESOURCE_GROUP \
+  --name "CTS-VibeAppUK51203-3" \
+  --resource-group "CTS-VibeAppUK5120" \
   --settings \
     WEBSITES_PORT=8080 \
     JAVA_OPTS="-Dserver.port=8080 -Xmx512m" \
-    WEBSITES_CONTAINER_START_TIME_LIMIT=600
+    WEBSITES_CONTAINER_START_TIME_LIMIT=600 \
+    SCM_DO_BUILD_DURING_DEPLOYMENT=true
+
+# Set the startup command
+az webapp config set \
+  --name "CTS-VibeAppUK51203-3" \
+  --resource-group "CTS-VibeAppUK5120" \
+  --startup-file "java -jar *.jar"
 ```
 
 ### Step 4: Alternative - Using Azure Portal
@@ -106,14 +113,23 @@ az webapp config appsettings set \
 ### Verify Setup:
 
 ```bash
-# Test Azure CLI login
+# Test Azure CLI login with your specific details
 az login --service-principal \
   --username $AZURE_CLIENT_ID \
   --password $AZURE_CLIENT_SECRET \
   --tenant $AZURE_TENANT_ID
 
-# List your web apps
-az webapp list --resource-group $RESOURCE_GROUP --output table
+# Verify your specific web app
+az webapp show \
+  --name "CTS-VibeAppUK51203-3" \
+  --resource-group "CTS-VibeAppUK5120" \
+  --output table
+
+# Check app settings
+az webapp config appsettings list \
+  --name "CTS-VibeAppUK51203-3" \
+  --resource-group "CTS-VibeAppUK5120" \
+  --output table
 ```
 
 ## 🚀 Next Steps
@@ -124,7 +140,7 @@ After setting up the secrets:
 2. GitHub Actions will automatically:
    - Build your Java application
    - Deploy to Azure App Service
-   - Your app will be available at: `https://vibecoding-java-app.azurewebsites.net`
+   - Your app will be available at: `https://cts-vibeappuk51203-3.azurewebsites.net`
 
 ## 📝 Important Notes
 

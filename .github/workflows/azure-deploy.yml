@@ -52,7 +52,7 @@ jobs:
       if: github.ref == 'refs/heads/main'
       uses: azure/webapps-deploy@v2
       with:
-        app-name: 'vibecoding-java-app'
+        app-name: 'CTS-VibeAppUK51203-3'
         package: 'Sample-Repo/target/*.jar'
         startup-command: 'java -jar *.jar'
         runtime-version: 'JAVA|21-java21'
