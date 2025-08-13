@@ -7,48 +7,53 @@
 **Subscription ID:** `ba7f988a-1d5f-4d79-98a5-e7fce6ed86eb`  
 **Resource Group:** `CTS-VibeAppUK5120`  
 
-## 🚀 Quick Setup Commands
+## � **IMPORTANT: Complete These Steps Before Running GitHub Actions**
 
 ### Step 1: Create Service Principal (Use these exact values)
 
-Run these commands in Azure Cloud Shell or Azure CLI:
+**⚠️ Run this in Azure Cloud Shell first:** https://shell.azure.com
 
 ```bash
 # Set your specific variables
 SUBSCRIPTION_ID="ba7f988a-1d5f-4d79-98a5-e7fce6ed86eb"
 RESOURCE_GROUP="CTS-VibeAppUK5120"
-APP_NAME="CTS-VibeAppUK51203-3"
 
 # Create Service Principal with correct scope
 az ad sp create-for-rbac \
   --name "github-actions-vibecode-sp" \
   --role contributor \
   --scopes /subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP \
-  --sdk-auth
+  --json-auth
 ```
+
+**⚠️ SAVE THE OUTPUT - You'll need these values for GitHub secrets!**
 
 **Expected Output:**
 ```json
 {
   "clientId": "12345678-1234-1234-1234-123456789012",
-  "clientSecret": "your-client-secret-here",
+  "clientSecret": "your-client-secret-here", 
   "subscriptionId": "ba7f988a-1d5f-4d79-98a5-e7fce6ed86eb",
   "tenantId": "87654321-4321-4321-4321-210987654321"
 }
 ```
 
-### Step 2: Configure GitHub Repository Secrets
+### Step 2: 🔑 **CRITICAL - Add GitHub Secrets NOW**
 
-Go to: **GitHub Repository → Settings → Secrets and variables → Actions → New repository secret**
+**⚠️ The GitHub Actions will FAIL until you complete this step!**
 
-Add these secrets with the values from the Service Principal output:
+1. **Go to:** `https://github.com/gauravpriya26/VibeCoding-Implementation/settings/secrets/actions`
+2. **Click:** "New repository secret" 
+3. **Add these 4 secrets** using the values from Step 1 output:
 
-| Secret Name | Description | Your Value (from command output) |
+| Secret Name | Description | Your Value (from Azure CLI output) |
 |-------------|-------------|-----------------------------------|
-| `AZURE_CLIENT_ID` | Application (client) ID | Copy `clientId` from output |
-| `AZURE_CLIENT_SECRET` | Client secret value | Copy `clientSecret` from output |
-| `AZURE_TENANT_ID` | Directory (tenant) ID | Copy `tenantId` from output |
+| `AZURE_CLIENT_ID` | Application (client) ID | Copy `clientId` from JSON output |
+| `AZURE_CLIENT_SECRET` | Client secret value | Copy `clientSecret` from JSON output |
+| `AZURE_TENANT_ID` | Directory (tenant) ID | Copy `tenantId` from JSON output |
 | `AZURE_SUBSCRIPTION_ID` | Subscription ID | `ba7f988a-1d5f-4d79-98a5-e7fce6ed86eb` |
+
+**✅ Verification:** After adding secrets, you should see 4 secrets listed in GitHub.
 
 ### Step 3: Configure Your Existing App Service
 
