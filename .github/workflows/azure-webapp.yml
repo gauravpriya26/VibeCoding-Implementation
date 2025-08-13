@@ -54,5 +54,4 @@ jobs:
           app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
           slot-name: 'production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_C8972F06AD0744029BA56777B560EA57 }}
-          startup-command: "java -Dserver.port=$PORT -jar devops-migration-0.0.1-SNAPSHOT.jar"
           package: . 
