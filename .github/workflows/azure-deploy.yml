@@ -25,6 +25,18 @@ jobs:
         java-version: '21'
         distribution: 'temurin'
         cache: maven
+
+    - name: Validate Azure OIDC inputs
+      shell: bash
+      run: |
+        missing=()
+        [[ -z "${{ secrets.AZURE_CLIENT_ID }}" ]] && missing+=(AZURE_CLIENT_ID)
+        [[ -z "${{ secrets.AZURE_TENANT_ID }}" ]] && missing+=(AZURE_TENANT_ID)
+        [[ -z "${{ secrets.AZURE_SUBSCRIPTION_ID }}" ]] && missing+=(AZURE_SUBSCRIPTION_ID)
+        if (( ${#missing[@]} > 0 )); then
+          echo "::error::Missing required secrets: ${missing[*]}"
+          exit 1
+        fi
     
     - name: Build with Maven
       run: |
@@ -57,6 +69,8 @@ jobs:
       if: github.ref == 'refs/heads/main'
       uses: azure/login@v2
       with:
+        auth-type: ID_TOKEN
+        audience: 'api://AzureADTokenExchange'
         client-id: ${{ secrets.AZURE_CLIENT_ID }}
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
