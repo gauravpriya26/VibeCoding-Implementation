@@ -56,6 +56,12 @@ jobs:
             Write-Error "Could not find built jar under downloaded artifact"; exit 1
           }
           Copy-Item $jar.FullName ./app.jar -Force
+      - name: Prepare deploy folder
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path ./deploy -Force | Out-Null
+          Move-Item -Path ./app.jar -Destination ./deploy/app.jar -Force
+          if (Test-Path ./web.config) { Copy-Item ./web.config ./deploy/web.config -Force }
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
@@ -63,4 +69,4 @@ jobs:
           app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
           slot-name: 'production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_C8972F06AD0744029BA56777B560EA57 }}
-          package: . 
+          package: ./deploy 
