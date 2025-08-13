@@ -31,19 +31,23 @@ jobs:
         distribution: 'temurin'
         cache: maven
 
-    - name: Validate Azure OIDC inputs
+    - name: Validate Azure auth inputs
       shell: bash
       run: |
-        missing=()
-        [[ -z "${AZ_CLIENT_ID}" ]] && missing+=(AZURE_CLIENT_ID)
-        [[ -z "${AZ_TENANT_ID}" ]] && missing+=(AZURE_TENANT_ID)
-        [[ -z "${AZ_SUBSCRIPTION_ID}" ]] && missing+=(AZURE_SUBSCRIPTION_ID)
-        echo "ClientId present: $([[ -n \"${AZ_CLIENT_ID}\" ]] && echo yes || echo no)"
-        echo "TenantId present: $([[ -n \"${AZ_TENANT_ID}\" ]] && echo yes || echo no)"
-        echo "SubscriptionId present: $([[ -n \"${AZ_SUBSCRIPTION_ID}\" ]] && echo yes || echo no)"
-        if (( ${#missing[@]} > 0 )); then
-          echo "::error::Missing required values: ${missing[*]}"
-          exit 1
+        echo "Has AZURE_CREDENTIALS: $([[ -n \"${{ secrets.AZURE_CREDENTIALS }}\" ]] && echo yes || echo no)"
+        echo "Has OIDC client-id: $([[ -n \"${AZ_CLIENT_ID}\" ]] && echo yes || echo no)"
+        echo "Has OIDC tenant-id: $([[ -n \"${AZ_TENANT_ID}\" ]] && echo yes || echo no)"
+        echo "Has subscription-id: $([[ -n \"${AZ_SUBSCRIPTION_ID}\" ]] && echo yes || echo no)"
+        if [[ -z "${{ secrets.AZURE_CREDENTIALS }}" ]]; then
+          missing=()
+          [[ -z "${AZ_CLIENT_ID}" ]] && missing+=(AZURE_CLIENT_ID)
+          [[ -z "${AZ_TENANT_ID}" ]] && missing+=(AZURE_TENANT_ID)
+          [[ -z "${AZ_SUBSCRIPTION_ID}" ]] && missing+=(AZURE_SUBSCRIPTION_ID)
+          if (( ${#missing[@]} > 0 )); then
+            echo "::error::Missing required values for OIDC auth: ${missing[*]}"
+            echo "Provide OIDC secrets or set AZURE_CREDENTIALS JSON to use Service Principal fallback."
+            exit 1
+          fi
         fi
     
     - name: Build with Maven
@@ -72,9 +76,15 @@ jobs:
         name: java-app-jar
         path: ${{ steps.jar.outputs.path }}
         retention-days: 30
-    
-    - name: Azure Login
-      if: github.ref == 'refs/heads/main'
+
+    - name: Azure Login (Service Principal fallback)
+      if: github.ref == 'refs/heads/main' && secrets.AZURE_CREDENTIALS != ''
+      uses: azure/login@v2
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Azure Login (OIDC)
+      if: github.ref == 'refs/heads/main' && secrets.AZURE_CREDENTIALS == ''
       uses: azure/login@v2
       with:
         auth-type: ID_TOKEN
