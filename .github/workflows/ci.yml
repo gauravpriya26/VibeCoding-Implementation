@@ -34,35 +34,35 @@ jobs:
     
     - name: Validate Maven project
       run: mvn validate
-      working-directory: ./simple-java-maven-app
+      working-directory: ./Sample-Repo
     
     - name: Compile project
       run: mvn compile
-      working-directory: ./simple-java-maven-app
+      working-directory: ./Sample-Repo
     
     - name: Run tests
       run: mvn test
-      working-directory: ./simple-java-maven-app
+      working-directory: ./Sample-Repo
     
     - name: Generate test report
       uses: dorny/test-reporter@v1
       if: success() || failure()
       with:
         name: Maven Tests (JDK ${{ matrix.java-version }})
-        path: 'simple-java-maven-app/target/surefire-reports/*.xml'
+        path: 'Sample-Repo/target/surefire-reports/*.xml'
         reporter: java-junit
         fail-on-error: true
     
     - name: Build package
       run: mvn -B -DskipTests clean package
-      working-directory: ./simple-java-maven-app
+      working-directory: ./Sample-Repo
     
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       if: matrix.java-version == '21'
       with:
         name: jar-artifact
-        path: simple-java-maven-app/target/*.jar
+        path: Sample-Repo/target/*.jar
         retention-days: 30
 
   deliver:
@@ -85,13 +85,13 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: jar-artifact
-        path: simple-java-maven-app/target/
+        path: Sample-Repo/target/
     
     - name: Install to local repository
       run: |
         echo "Installing Maven-built Java application to local Maven repository"
         mvn jar:jar install:install help:evaluate -Dexpression=project.name
-      working-directory: ./simple-java-maven-app
+      working-directory: ./Sample-Repo
     
     - name: Extract project information
       id: project-info
@@ -103,13 +103,13 @@ jobs:
         echo "PROJECT_VERSION=$VERSION" >> $GITHUB_OUTPUT
         echo "Project: $NAME"
         echo "Version: $VERSION"
-      working-directory: ./simple-java-maven-app
+      working-directory: ./Sample-Repo
     
     - name: Run application
       run: |
         echo "Running the Java application"
         java -jar target/${{ steps.project-info.outputs.PROJECT_NAME }}-${{ steps.project-info.outputs.PROJECT_VERSION }}.jar
-      working-directory: ./simple-java-maven-app
+      working-directory: ./Sample-Repo
 
   security-scan:
     runs-on: ubuntu-latest
@@ -129,7 +129,7 @@ jobs:
     - name: Run OWASP Dependency Check
       run: |
         mvn org.owasp:dependency-check-maven:check
-      working-directory: ./simple-java-maven-app
+      working-directory: ./Sample-Repo
       continue-on-error: true
     
     - name: Upload OWASP Dependency Check results
@@ -137,5 +137,5 @@ jobs:
       if: always()
       with:
         name: owasp-dependency-check-report
-        path: simple-java-maven-app/target/dependency-check-report.html
+        path: Sample-Repo/target/dependency-check-report.html
         retention-days: 30

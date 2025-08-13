@@ -22,7 +22,7 @@ jobs:
     
     - name: Build and package
       run: mvn -B clean package
-      working-directory: ./simple-java-maven-app
+      working-directory: ./Sample-Repo
     
     - name: Extract project information
       id: project-info
@@ -31,14 +31,14 @@ jobs:
         VERSION=$(mvn -q -DforceStdout help:evaluate -Dexpression=project.version)
         echo "PROJECT_NAME=$NAME" >> $GITHUB_OUTPUT
         echo "PROJECT_VERSION=$VERSION" >> $GITHUB_OUTPUT
-      working-directory: ./simple-java-maven-app
+      working-directory: ./Sample-Repo
     
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       if: github.event_name == 'release'
       with:
         files: |
-          simple-java-maven-app/target/${{ steps.project-info.outputs.PROJECT_NAME }}-${{ steps.project-info.outputs.PROJECT_VERSION }}.jar
+          Sample-Repo/target/${{ steps.project-info.outputs.PROJECT_NAME }}-${{ steps.project-info.outputs.PROJECT_VERSION }}.jar
         name: Release ${{ steps.project-info.outputs.PROJECT_VERSION }}
         tag_name: ${{ github.ref_name }}
         draft: false
@@ -52,4 +52,4 @@ jobs:
         echo "Configure your specific registry credentials and endpoints"
         # Example for Maven Central or other registries:
         # mvn deploy -DskipTests
-      working-directory: ./simple-java-maven-app
+      working-directory: ./Sample-Repo
