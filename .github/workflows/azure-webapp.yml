@@ -46,6 +46,7 @@ jobs:
           name: app
           path: .
       - name: Azure login
+        if: ${{ secrets.AZURE_CREDENTIALS != '' }}
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
@@ -55,5 +56,5 @@ jobs:
         with:
           app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
           slot-name: 'production'
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: 'target/*SNAPSHOT.jar' 
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_282DE9C7901148ACB29A84C95291F800 }}
+          package: '*.jar' 
